@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Http\View\Composers\AdminComposer;
 
 class AppServiceProvider extends ServiceProvider
 {

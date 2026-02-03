@@ -1,178 +1,258 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', $event->name . ' - Event Details')
 
+@section('breadcrumb')
+<a href="{{ route('admin.events.index') }}">Events</a>
+<i class="fas fa-chevron-right"></i>
+<span>{{ Str::limit($event->name, 30) }}</span>
+@endsection
+
 @section('content')
-<div class="mb-6">
-    <a href="{{ route('admin.events.index') }}" class="text-indigo-600 hover:text-indigo-700">
-        ← Back to Events
-    </a>
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        @if($event->banner_image)
+            <img src="{{ asset('storage/' . $event->banner_image) }}" alt="{{ $event->name }}"
+                 style="width: 80px; height: 80px; border-radius: 16px; object-fit: cover;">
+        @else
+            <div style="width: 80px; height: 80px; border-radius: 16px; background: linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-accent-dark) 100%); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-trophy" style="font-size: 32px; color: white;"></i>
+            </div>
+        @endif
+        <div>
+            <h1 class="page-title" style="margin-bottom: 4px;">{{ $event->name }}</h1>
+            <p style="color: var(--text-light); font-size: 14px;">by {{ $event->user->name ?? 'Unknown' }} • Created {{ $event->created_at->format('M d, Y') }}</p>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                @if($event->status === 'active')
+                    <span class="badge badge-success"><i class="fas fa-circle" style="font-size: 6px;"></i> Live</span>
+                @elseif($event->status === 'draft')
+                    <span class="badge badge-warning">Draft</span>
+                @elseif($event->status === 'completed')
+                    <span class="badge badge-secondary">Completed</span>
+                @elseif($event->status === 'suspended')
+                    <span class="badge badge-danger">Suspended</span>
+                @endif
+                <span class="badge badge-secondary">₦{{ number_format($event->vote_price) }}/vote</span>
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <a href="{{ route('events.show', $event->slug) }}" target="_blank" class="btn btn-secondary">
+            <i class="fas fa-external-link-alt"></i>
+            View Public Page
+        </a>
+        @if($event->status !== 'suspended')
+            <form method="POST" action="{{ route('admin.events.suspend', $event) }}" onsubmit="return confirm('Suspend this event?')">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-ban"></i>
+                    Suspend Event
+                </button>
+            </form>
+        @else
+            <form method="POST" action="{{ route('admin.events.activate', $event) }}">
+                @csrf
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i>
+                    Activate Event
+                </button>
+            </form>
+        @endif
+    </div>
 </div>
 
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="p-6 border-b border-gray-200">
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $event->name }}</h1>
-                <p class="text-gray-600">{{ $event->description }}</p>
-            </div>
-            <div class="flex space-x-2">
-                <a href="{{ route('admin.events.edit', $event) }}" 
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Edit Event
-                </a>
-                <a href="{{ route('events.show', $event->slug) }}" target="_blank"
-                   class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                    View Public Page
-                </a>
+<!-- Stats Cards -->
+<div class="stats-grid mb-6">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-vote-yea"></i>
             </div>
         </div>
+        <div class="stat-value">{{ number_format($stats['total_votes'] ?? 0) }}</div>
+        <div class="stat-label">Total Votes</div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
-        <div class="text-center">
-            <p class="text-sm text-gray-600 mb-1">Vote Price</p>
-            <p class="text-2xl font-bold text-indigo-600">₦{{ number_format($event->vote_price) }}</p>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-naira-sign"></i>
+            </div>
         </div>
-        <div class="text-center">
-            <p class="text-sm text-gray-600 mb-1">Total Votes</p>
-            <p class="text-2xl font-bold text-purple-600">{{ number_format($totalVotes) }}</p>
+        <div class="stat-value">₦{{ number_format($stats['total_revenue'] ?? 0) }}</div>
+        <div class="stat-label">Total Revenue</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon info">
+                <i class="fas fa-folder"></i>
+            </div>
         </div>
-        <div class="text-center">
-            <p class="text-sm text-gray-600 mb-1">Total Revenue</p>
-            <p class="text-2xl font-bold text-green-600">₦{{ number_format($totalRevenue) }}</p>
+        <div class="stat-value">{{ $stats['total_categories'] ?? 0 }}</div>
+        <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-users"></i>
+            </div>
         </div>
-        <div class="text-center">
-            <p class="text-sm text-gray-600 mb-1">Status</p>
-            <p class="text-lg font-semibold 
-                {{ $event->status === 'active' ? 'text-green-600' : 
-                   ($event->status === 'completed' ? 'text-gray-600' : 'text-yellow-600') }}">
-                {{ ucfirst($event->status) }}
-            </p>
-        </div>
+        <div class="stat-value">{{ $stats['total_contestants'] ?? 0 }}</div>
+        <div class="stat-label">Contestants</div>
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-xl font-bold text-gray-900">Categories & Contestants</h2>
-        <div class="space-x-2">
-            <a href="{{ route('admin.categories.create', $event) }}" 
-               class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                Add Category
-            </a>
+<div class="grid-2">
+    <!-- Categories & Contestants -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-folder-open"></i>
+                Categories & Contestants
+            </h3>
         </div>
-    </div>
-
-    @if($event->categories && $event->categories->count() > 0)
-        @foreach($event->categories as $category)
-        <div class="p-6 border-b border-gray-200 last:border-b-0">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ $category->name }}</h3>
-                    <p class="text-sm text-gray-600">{{ $category->description }}</p>
-                </div>
-                <div class="flex space-x-2">
-                    <a href="{{ route('admin.contestants.create', $category) }}" 
-                       class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
-                        Add Contestant
-                    </a>
-                    <a href="{{ route('admin.categories.edit', $category) }}" 
-                       class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
-                        Edit Category
-                    </a>
-                </div>
-            </div>
-
-            @if($category->contestants && $category->contestants->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    @foreach($category->contestants->sortByDesc('total_votes') as $index => $contestant)
-                    <div class="border rounded-lg p-4 {{ $contestant->status === 'evicted' ? 'bg-red-50 border-red-300' : 'bg-gray-50' }}">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-2xl font-bold text-gray-400">#{{ $index + 1 }}</span>
-                            @if($contestant->status === 'evicted')
-                                <span class="text-xs bg-red-600 text-white px-2 py-1 rounded">Evicted</span>
-                            @endif
+        <div class="card-body no-padding">
+            @if($event->categories->count() > 0)
+                @foreach($event->categories as $category)
+                    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h4 style="font-weight: 600;">{{ $category->name }}</h4>
+                            <span class="badge badge-secondary">{{ $category->contestants->count() }} contestants</span>
                         </div>
-                        @if($contestant->photo)
-                            <img src="{{ asset('storage/' . $contestant->photo) }}" 
-                                 alt="{{ $contestant->name }}"
-                                 class="w-full h-32 object-cover rounded mb-2">
+                        @if($category->contestants->count() > 0)
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                @foreach($category->contestants->sortByDesc('total_votes')->take(5) as $contestant)
+                                    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--main-bg); border-radius: 8px; font-size: 13px;">
+                                        @if($contestant->photo)
+                                            <img src="{{ asset('storage/' . $contestant->photo) }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                                        @else
+                                            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--admin-accent); display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 700;">
+                                                {{ strtoupper(substr($contestant->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                        <span>{{ Str::limit($contestant->name, 15) }}</span>
+                                        <span style="color: var(--success); font-weight: 600;">{{ number_format($contestant->total_votes) }}</span>
+                                    </div>
+                                @endforeach
+                                @if($category->contestants->count() > 5)
+                                    <span style="padding: 8px 12px; color: var(--text-light); font-size: 13px;">+{{ $category->contestants->count() - 5 }} more</span>
+                                @endif
+                            </div>
+                        @else
+                            <p style="color: var(--text-light); font-size: 13px;">No contestants yet</p>
                         @endif
-                        <h4 class="font-semibold text-gray-900 mb-1">{{ $contestant->name }}</h4>
-                        <p class="text-2xl font-bold text-indigo-600 mb-2">{{ number_format($contestant->total_votes) }} votes</p>
-                        <div class="flex space-x-2">
-                            <a href="{{ route('admin.contestants.edit', $contestant) }}" 
-                               class="text-xs text-blue-600 hover:text-blue-700">Edit</a>
-                        </div>
                     </div>
-                    @endforeach
-                </div>
+                @endforeach
             @else
-                <p class="text-gray-500 text-center py-4">No contestants yet. Add your first contestant!</p>
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No categories created yet</p>
+                </div>
             @endif
         </div>
-        @endforeach
-    @else
-        <div class="p-8 text-center text-gray-600">
-            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            </svg>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-            <p class="text-gray-600 mb-4">Get started by creating your first category</p>
-            <a href="{{ route('admin.categories.create', $event) }}" 
-               class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-                Create Category
-            </a>
+    </div>
+
+    <!-- Recent Votes -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-history"></i>
+                Recent Votes
+            </h3>
+            <a href="{{ route('admin.transactions.index', ['event' => $event->id]) }}" class="btn btn-secondary btn-sm">View All</a>
         </div>
-    @endif
+        <div class="card-body no-padding">
+            @if($recentVotes->count() > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Voter</th>
+                            <th>Contestant</th>
+                            <th>Votes</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentVotes as $vote)
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <h4>{{ $vote->voter_name ?? 'Anonymous' }}</h4>
+                                        <p style="font-size: 11px;">{{ $vote->voter_email ?? '' }}</p>
+                                    </div>
+                                </td>
+                                <td>{{ $vote->contestant->name ?? 'N/A' }}</td>
+                                <td><strong>{{ number_format($vote->number_of_votes) }}</strong></td>
+                                <td style="color: var(--success);">₦{{ number_format($vote->amount_paid) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-vote-yea"></i>
+                    <p>No votes yet</p>
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
 
-<div class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-xl font-bold text-gray-900">Event Tickets</h2>
-        <a href="{{ route('admin.tickets.create', $event) }}" 
-           class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-            Add Ticket
-        </a>
+<!-- Organizer Info -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-user"></i>
+            Organizer Information
+        </h3>
+        <a href="{{ route('admin.users.show', $event->user) }}" class="btn btn-secondary btn-sm">View Profile</a>
     </div>
+    <div class="card-body">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="user-avatar" style="width: 56px; height: 56px; font-size: 20px;">
+                {{ strtoupper(substr($event->user->name ?? 'U', 0, 1)) }}
+            </div>
+            <div>
+                <h4 style="font-weight: 600; font-size: 16px;">{{ $event->user->name ?? 'Unknown' }}</h4>
+                <p style="color: var(--text-light);">{{ $event->user->email ?? '' }}</p>
+            </div>
+            <div style="margin-left: auto; text-align: right;">
+                <p style="font-size: 13px; color: var(--text-light);">Member since</p>
+                <p style="font-weight: 600;">{{ $event->user->created_at->format('M d, Y') ?? 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-    @if($event->tickets && $event->tickets->count() > 0)
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sold / Total</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($event->tickets as $ticket)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium">{{ $ticket->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
-                            {{ ucfirst($ticket->type) }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">₦{{ number_format($ticket->price) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $ticket->sold }} / {{ $ticket->quantity }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <a href="{{ route('admin.tickets.edit', $ticket) }}" 
-                           class="text-blue-600 hover:text-blue-700 mr-3">Edit</a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+<!-- Event Details -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-info-circle"></i>
+            Event Details
+        </h3>
     </div>
-    @else
-    <div class="p-6 text-center text-gray-600">
-        No tickets created yet.
+    <div class="card-body">
+        @if($event->description)
+            <div style="margin-bottom: 24px;">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 8px;">Description</label>
+                <p style="color: var(--text-medium); line-height: 1.6;">{{ $event->description }}</p>
+            </div>
+        @endif
+        <div class="grid-3">
+            <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 8px;">Start Date</label>
+                <p style="font-weight: 600;">{{ $event->start_date ? $event->start_date->format('M d, Y h:i A') : 'Not set' }}</p>
+            </div>
+            <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 8px;">End Date</label>
+                <p style="font-weight: 600;">{{ $event->end_date ? $event->end_date->format('M d, Y h:i A') : 'Not set' }}</p>
+            </div>
+            <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 8px;">Vote Price</label>
+                <p style="font-weight: 600; color: var(--admin-accent);">₦{{ number_format($event->vote_price) }}</p>
+            </div>
+        </div>
     </div>
-    @endif
 </div>
 @endsection

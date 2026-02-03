@@ -1,129 +1,395 @@
-{{-- resources/views/admin/dashboard.blade.php --}}
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
-@section('title', 'Dashboard - ChilkyVote Admin')
+@section('title', 'Dashboard')
+
+@section('breadcrumb')
+<span>Dashboard</span>
+@endsection
 
 @section('content')
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-    <p class="text-gray-600">Welcome back, {{ auth()->user()->name }}</p>
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Welcome back! Here's what's happening on VoteAfrika today.</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600">Total Events</p>
-                <p class="text-3xl font-bold text-gray-900">{{ $stats['total_events'] }}</p>
+<!-- Primary Stats -->
+<div class="stats-grid">
+    <!-- Total Revenue -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-naira-sign"></i>
             </div>
-            <div class="bg-indigo-100 rounded-full p-3">
-                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i>
+                12.5%
+            </div>
+        </div>
+        <div class="stat-value">₦{{ number_format($stats['total_revenue'] ?? 0) }}</div>
+        <div class="stat-label">Total Platform Revenue</div>
+    </div>
+
+    <!-- Platform Earnings (Fees) -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i>
+                8.2%
+            </div>
+        </div>
+        <div class="stat-value">₦{{ number_format($stats['platform_earnings'] ?? 0) }}</div>
+        <div class="stat-label">Platform Earnings (Fees)</div>
+    </div>
+
+    <!-- Total Organizers -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon info">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i>
+                5.3%
+            </div>
+        </div>
+        <div class="stat-value">{{ number_format($stats['total_organizers'] ?? 0) }}</div>
+        <div class="stat-label">Registered Organizers</div>
+    </div>
+
+    <!-- Total Events -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ number_format($stats['total_events'] ?? 0) }}</div>
+        <div class="stat-label">Total Events Created</div>
+    </div>
+</div>
+
+<!-- Secondary Stats Row -->
+<div class="stats-grid mb-6">
+    <!-- Total Votes -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-vote-yea"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ number_format($stats['total_votes'] ?? 0) }}</div>
+        <div class="stat-label">Total Votes Cast</div>
+    </div>
+
+    <!-- Tickets Sold -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ number_format($stats['tickets_sold'] ?? 0) }}</div>
+        <div class="stat-label">Tickets Sold</div>
+    </div>
+
+    <!-- Pending Withdrawals -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon danger">
+                <i class="fas fa-clock"></i>
+            </div>
+            @if(($stats['pending_withdrawals_count'] ?? 0) > 0)
+                <span class="badge badge-danger">Action Required</span>
+            @endif
+        </div>
+        <div class="stat-value">{{ $stats['pending_withdrawals_count'] ?? 0 }}</div>
+        <div class="stat-label">Pending Withdrawals</div>
+    </div>
+
+    <!-- Active Events -->
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-broadcast-tower"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ $stats['active_events'] ?? 0 }}</div>
+        <div class="stat-label">Live Events</div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid-2 mb-6">
+    <!-- Revenue Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-chart-line"></i>
+                Revenue Overview
+            </h3>
+            <select class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last 90 Days</option>
+            </select>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <i class="fas fa-chart-area" style="font-size: 48px; opacity: 0.3;"></i>
+                <p style="margin-top: 12px;">Revenue chart will be displayed here</p>
             </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600">Active Events</p>
-                <p class="text-3xl font-bold text-green-600">{{ $stats['active_events'] }}</p>
-            </div>
-            <div class="bg-green-100 rounded-full p-3">
-                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
+    <!-- Voting Activity Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                Voting Activity
+            </h3>
+            <select class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px;">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+            </select>
         </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600">Total Votes</p>
-                <p class="text-3xl font-bold text-purple-600">{{ number_format($stats['total_votes']) }}</p>
-            </div>
-            <div class="bg-purple-100 rounded-full p-3">
-                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
-                </svg>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-600">Total Revenue</p>
-                <p class="text-3xl font-bold text-blue-600">₦{{ number_format($stats['total_revenue']) }}</p>
-            </div>
-            <div class="bg-blue-100 rounded-full p-3">
-                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+        <div class="card-body">
+            <div class="chart-container">
+                <i class="fas fa-chart-bar" style="font-size: 48px; opacity: 0.3;"></i>
+                <p style="margin-top: 12px;">Voting activity chart will be displayed here</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-xl font-bold text-gray-900">Recent Events</h2>
-        <a href="{{ route('admin.events.create') }}" 
-           class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
-            Create Event
-        </a>
-    </div>
-    
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categories</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($events as $event)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">{{ $event->name }}</div>
-                        @if(auth()->user()->isAdmin())
-                            <div class="text-sm text-gray-500">By {{ $event->user->name }}</div>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $event->categories_count }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            {{ $event->status === 'active' ? 'bg-green-100 text-green-800' : 
-                               ($event->status === 'completed' ? 'bg-gray-100 text-gray-800' : 
-                               'bg-yellow-100 text-yellow-800') }}">
-                            {{ ucfirst($event->status) }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $event->end_date->format('M d, Y') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{{ route('admin.events.show', $event) }}" 
-                           class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                        <a href="{{ route('admin.events.edit', $event) }}" 
-                           class="text-blue-600 hover:text-blue-900">Edit</a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+<!-- Tables Section -->
+<div class="grid-2">
+    <!-- Pending Withdrawals -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-hand-holding-usd"></i>
+                Pending Withdrawals
+            </h3>
+            <a href="{{ route('admin.withdrawals.index') ?? '#' }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body no-padding">
+            @if(isset($pendingWithdrawals) && count($pendingWithdrawals) > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Organizer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pendingWithdrawals as $withdrawal)
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar">{{ strtoupper(substr($withdrawal->user->name ?? 'U', 0, 1)) }}</div>
+                                        <div class="user-info">
+                                            <h4>{{ $withdrawal->user->name ?? 'Unknown' }}</h4>
+                                            <p>{{ $withdrawal->user->email ?? '' }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><strong>₦{{ number_format($withdrawal->amount) }}</strong></td>
+                                <td>{{ $withdrawal->created_at->format('M d, Y') }}</td>
+                                <td>
+                                    <a href="{{ route('admin.withdrawals.show', $withdrawal) ?? '#' }}" class="btn btn-primary btn-sm">Review</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>All Caught Up!</h3>
+                    <p>No pending withdrawal requests.</p>
+                </div>
+            @endif
+        </div>
     </div>
 
-    <div class="p-4 border-t border-gray-200">
-        {{ $events->links() }}
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-exchange-alt"></i>
+                Recent Transactions
+            </h3>
+            <a href="{{ route('admin.transactions.index') ?? '#' }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body no-padding">
+            @if(isset($recentTransactions) && count($recentTransactions) > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Voter</th>
+                            <th>Event</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentTransactions as $transaction)
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <h4>{{ $transaction->voter_name ?? 'Anonymous' }}</h4>
+                                        <p class="text-muted font-mono" style="font-size: 11px;">{{ $transaction->voter_email ?? '' }}</p>
+                                    </div>
+                                </td>
+                                <td>{{ Str::limit($transaction->contestant->category->event->name ?? 'N/A', 20) }}</td>
+                                <td><strong>₦{{ number_format($transaction->amount_paid) }}</strong></td>
+                                <td>
+                                    <span class="badge badge-{{ $transaction->payment_status === 'success' ? 'success' : ($transaction->payment_status === 'pending' ? 'warning' : 'danger') }}">
+                                        {{ ucfirst($transaction->payment_status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Transactions</h3>
+                    <p>Transactions will appear here.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section -->
+<div class="grid-3 mt-6">
+    <!-- Top Events -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-trophy"></i>
+                Top Events
+            </h3>
+        </div>
+        <div class="card-body no-padding">
+            @if(isset($topEvents) && count($topEvents) > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Votes</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($topEvents as $event)
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <h4>{{ Str::limit($event->name, 25) }}</h4>
+                                        <p>by {{ $event->user->name ?? 'Unknown' }}</p>
+                                    </div>
+                                </td>
+                                <td>{{ number_format($event->total_votes ?? 0) }}</td>
+                                <td><strong>₦{{ number_format($event->total_revenue ?? 0) }}</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No events yet.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Top Organizers -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-star"></i>
+                Top Organizers
+            </h3>
+        </div>
+        <div class="card-body no-padding">
+            @if(isset($topOrganizers) && count($topOrganizers) > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Organizer</th>
+                            <th>Events</th>
+                            <th>Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($topOrganizers as $organizer)
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px;">{{ strtoupper(substr($organizer->name, 0, 1)) }}</div>
+                                        <div class="user-info">
+                                            <h4>{{ $organizer->name }}</h4>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ $organizer->events_count ?? 0 }}</td>
+                                <td><strong>₦{{ number_format($organizer->total_earnings ?? 0) }}</strong></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>No organizers yet.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-info-circle"></i>
+                Quick Stats
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="space-y: 16px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-medium);">Events Today</span>
+                    <strong>{{ $stats['events_today'] ?? 0 }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-medium);">Votes Today</span>
+                    <strong>{{ number_format($stats['votes_today'] ?? 0) }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-medium);">Revenue Today</span>
+                    <strong>₦{{ number_format($stats['revenue_today'] ?? 0) }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-medium);">New Users Today</span>
+                    <strong>{{ $stats['new_users_today'] ?? 0 }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                    <span style="color: var(--text-medium);">Platform Fee Rate</span>
+                    <strong>{{ $stats['platform_fee_rate'] ?? 10 }}%</strong>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

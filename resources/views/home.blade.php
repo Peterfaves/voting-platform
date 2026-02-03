@@ -70,68 +70,129 @@
                 <!-- Events Grid -->
                 <div id="events-grid" class="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                     @foreach($events as $event)
-                        <div class="searchable-item group">
-                            <a href="{{ route('events.show', $event->slug) }}" class="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gold/30 hover:shadow-lg transition-all duration-300">
-                                <!-- Event Image -->
-                                <div class="relative aspect-[4/3] bg-gradient-to-br from-brown to-brown-dark overflow-hidden">
-                                    @if($event->banner_image)
-                                        <img
-                                            src="{{ asset('storage/' . $event->banner_image) }}"
-                                            alt="{{ $event->name }}"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        >
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center">
-                                            <div class="text-center">
-                                                <div class="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg transform rotate-3 group-hover:rotate-6 transition-transform">
-                                                    <svg class="w-8 h-8 text-brown-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                                                    </svg>
+                        @php
+                            $isExpired = $event->status === 'completed';
+                        @endphp
+                        
+                        <div class="searchable-item group {{ $isExpired ? 'expired-event' : '' }}">
+                            @if($isExpired)
+                                {{-- Expired Event - Not Clickable --}}
+                                <div class="block bg-white rounded-xl border border-gray-100 overflow-hidden opacity-60 cursor-not-allowed relative">
+                                    {{-- Expired Overlay --}}
+                                    <div class="absolute inset-0 bg-gray-900/10 z-10 pointer-events-none"></div>
+                                    
+                                    <!-- Event Image -->
+                                    <div class="relative aspect-[4/3] bg-gradient-to-br from-brown to-brown-dark overflow-hidden grayscale">
+                                        @if($event->banner_image)
+                                            <img
+                                                src="{{ asset('storage/' . $event->banner_image) }}"
+                                                alt="{{ $event->name }}"
+                                                class="w-full h-full object-cover"
+                                            >
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <div class="text-center">
+                                                    <div class="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg transform rotate-3">
+                                                        <svg class="w-8 h-8 text-brown-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                                        </svg>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    @endif
+                                        @endif
 
-                                    <!-- Status Badge -->
-                                    @if($event->status === 'active')
-                                        <div class="absolute top-3 left-3">
-                                            <span class="inline-flex items-center gap-1.5 bg-green-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg">
-                                                <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                                                Live
+                                        <!-- Expired Badge -->
+                                        <div class="absolute top-3 left-3 z-20">
+                                            <span class="inline-flex items-center gap-1.5 bg-red-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                Expired
                                             </span>
                                         </div>
-                                    @elseif($event->status === 'completed')
-                                        <div class="absolute top-3 left-3">
-                                            <span class="inline-flex items-center bg-gray-800/80 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                                                Ended
+
+                                        <!-- Vote Price Badge -->
+                                        <div class="absolute bottom-3 right-3">
+                                            <span class="inline-flex items-center bg-white/95 backdrop-blur-sm text-gray-500 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm line-through">
+                                                ₦{{ number_format($event->vote_price) }}/vote
                                             </span>
                                         </div>
-                                    @endif
+                                    </div>
 
-                                    <!-- Vote Price Badge -->
-                                    <div class="absolute bottom-3 right-3">
-                                        <span class="inline-flex items-center bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                                            ₦{{ number_format($event->vote_price) }}/vote
-                                        </span>
+                                    <!-- Event Content -->
+                                    <div class="p-4">
+                                        <h3 class="text-sm font-semibold text-gray-500 leading-snug line-clamp-2 mb-2">
+                                            {{ $event->name }}
+                                        </h3>
+
+                                        <p class="text-xs text-gray-400 mb-3">
+                                            Ended {{ $event->end_date->format('M d, Y') }}
+                                        </p>
+
+                                        <!-- Disabled Button -->
+                                        <button disabled class="w-full py-2 bg-gray-100 text-gray-400 text-xs font-semibold rounded-lg cursor-not-allowed">
+                                            Voting Closed
+                                        </button>
                                     </div>
                                 </div>
+                            @else
+                                {{-- Active/Draft Event - Clickable --}}
+                                <a href="{{ route('events.show', $event->slug) }}" class="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gold/30 hover:shadow-lg transition-all duration-300">
+                                    <!-- Event Image -->
+                                    <div class="relative aspect-[4/3] bg-gradient-to-br from-brown to-brown-dark overflow-hidden">
+                                        @if($event->banner_image)
+                                            <img
+                                                src="{{ asset('storage/' . $event->banner_image) }}"
+                                                alt="{{ $event->name }}"
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            >
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <div class="text-center">
+                                                    <div class="w-16 h-16 bg-gradient-to-br from-gold to-gold-dark rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg transform rotate-3 group-hover:rotate-6 transition-transform">
+                                                        <svg class="w-8 h-8 text-brown-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
 
-                                <!-- Event Content -->
-                                <div class="p-4">
-                                    <h3 class="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-gold-dark transition-colors mb-2">
-                                        {{ $event->name }}
-                                    </h3>
+                                        <!-- Status Badge -->
+                                        @if($event->status === 'active')
+                                            <div class="absolute top-3 left-3">
+                                                <span class="inline-flex items-center gap-1.5 bg-green-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg">
+                                                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                                    Live
+                                                </span>
+                                            </div>
+                                        @endif
 
-                                    <p class="text-xs text-gray-500 mb-3">
-                                        {{ $event->start_date->format('M d, Y') }} • {{ $event->start_date->format('g:i A') }}
-                                    </p>
+                                        <!-- Vote Price Badge -->
+                                        <div class="absolute bottom-3 right-3">
+                                            <span class="inline-flex items-center bg-white/95 backdrop-blur-sm text-gray-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                                                ₦{{ number_format($event->vote_price) }}/vote
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                    <!-- CTA Button -->
-                                    <button class="w-full py-2 bg-gray-50 group-hover:bg-gradient-to-r group-hover:from-gold group-hover:to-gold-dark text-gray-700 group-hover:text-brown-dark text-xs font-semibold rounded-lg transition-all duration-300">
-                                        View Event
-                                    </button>
-                                </div>
-                            </a>
+                                    <!-- Event Content -->
+                                    <div class="p-4">
+                                        <h3 class="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-gold-dark transition-colors mb-2">
+                                            {{ $event->name }}
+                                        </h3>
+
+                                        <p class="text-xs text-gray-500 mb-3">
+                                            {{ $event->start_date->format('M d, Y') }} • {{ $event->start_date->format('g:i A') }}
+                                        </p>
+
+                                        <!-- CTA Button -->
+                                        <button class="w-full py-2 bg-gray-50 group-hover:bg-gradient-to-r group-hover:from-gold group-hover:to-gold-dark text-gray-700 group-hover:text-brown-dark text-xs font-semibold rounded-lg transition-all duration-300">
+                                            View Event
+                                        </button>
+                                    </div>
+                                </a>
+                            @endif
                         </div>
                     @endforeach
                 </div>

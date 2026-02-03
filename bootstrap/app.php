@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'paystack.webhook' => \App\Http\Middleware\ValidatePaystackWebhook::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,  // ADD THIS LINE
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
